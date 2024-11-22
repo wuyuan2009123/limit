@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: limit
+
+  redis:
+    database: 0
+    host: localhost
+    port: 6379
+    timeout: 5000
+
+  datasource:
+    url: jdbc:h2:mem:mydb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: password
+  h2:
+    console:
+      enabled: true
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
