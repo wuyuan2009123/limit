@@ -20,6 +20,7 @@ import org.springframework.expression.Expression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StopWatch;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -43,6 +44,8 @@ public class RedissonRateLimitAspect {
 
     @Around("@annotation(redissonRateLimit)")
     public Object redissonRateLimitCheck(ProceedingJoinPoint joinPoint, RedissonRateLimit redissonRateLimit) throws Throwable {
+        StopWatch stopWatch = new StopWatch("limit");
+        stopWatch.start("limitOne");
         String key = getKey(joinPoint);
         ServletRequestAttributes servletRequestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         log.warn("RedissonRateLimit开始工作");
@@ -54,7 +57,12 @@ public class RedissonRateLimitAspect {
         if (!result) {
             throw new LimitException("当前访问人数过多，请稍后再试");
         }
-        return joinPoint.proceed();
+        stopWatch.stop();
+        stopWatch.start("limitTarget");
+        Object proceed = joinPoint.proceed();
+        stopWatch.stop();
+        log.info(stopWatch.prettyPrint());
+        return proceed;
     }
 
     private String getKey(ProceedingJoinPoint joinPoint) {
